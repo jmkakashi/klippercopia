@@ -1,0 +1,525 @@
+# Happy Hare MMU includes (should be near top of file)
+[include mmu/base/*.cfg]
+[include mmu/macros/*.cfg]
+[virtual_sdcard]
+path: /home/pi/printer_data/gcodes
+on_error_gcode: CANCEL_PRINT
+[include mainsail.cfg]
+[include klicky-probe.cfg]
+[include stealthburner_leds.cfg]
+
+# Happy Hare Client macros (should be after last include or other PAUSE/CANCEL macros)
+#[include mmu/optional/client_macros.cfg]
+
+[mcu]
+serial: /dev/serial/by-id/usb-Klipper_stm32f446xx_370020000651343437373238-if00
+
+
+[mcu EBBCan]
+canbus_uuid: 7b25b7282b3c
+
+#[mcu UNIT0]
+#canbus_uuid: 6f72e29c6ddd
+
+
+
+[bed_mesh]
+zero_reference_position: 150, 150 # The centre of your bed. 
+speed: 80
+horizontal_move_z: 10
+mesh_min: 40, 40 # The first probed coordinate, nearest to the origin. This coordinate is relative to the probe's location.
+mesh_max: 290, 290 # The probed coordinate farthest from the origin. This is not necessarily the last point probed, as the probing process occurs in a zig-zag fashion. As with mesh_min, this coordinate is relative to the probe's location.
+probe_count: 10, 10
+adaptive_margin: 10
+mesh_pps: 0,0 # Disable interpolation - mesh is probably dense enough
+
+
+
+
+#[safe_z_home]
+#home_xy_position: 150, 150 # This should be for the CENTRE OF YOUR BED.
+#speed: 200
+#z_hop: 10
+#z_hop_speed: 100
+
+[probe]
+pin: EBBCan:PB5
+#z_offset: 0
+x_offset: 0.0
+y_offset: 0.0
+
+
+[exclude_object]
+
+[force_move]
+enable_force_move: True
+
+[printer]
+kinematics: corexy
+max_velocity: 300  
+max_accel: 3000
+max_z_velocity: 20	
+max_z_accel: 80
+square_corner_velocity: 300
+
+#####################################################################
+#   X/Y Stepper Settings
+#####################################################################
+
+##  Connected to X on mcu_xye (B Motor)
+[stepper_x]
+step_pin: PF13
+dir_pin: PF12
+enable_pin: !PF14
+rotation_distance: 40
+microsteps: 32
+full_steps_per_rotation: 200  #set to 400 for 0.9 degree stepper
+endstop_pin: EBBCan: PB7
+position_min: 0
+position_endstop: 295
+position_max: 300
+homing_speed: 150  #Max 100
+homing_retract_dist: 5
+homing_positive_dir: true
+
+[tmc2209 stepper_x]
+uart_pin: PC4
+interpolate: True
+run_current: 0.8
+hold_current: 0.7
+sense_resistor: 0.110
+stealthchop_threshold: 0
+
+##  Connected to Y on mcu_xye (A Motor)
+[stepper_y]
+step_pin: PG0
+dir_pin: !PG1
+enable_pin: !PF15
+rotation_distance: 40
+microsteps: 32
+full_steps_per_rotation:200  #set to 400 for 0.9 degree stepper
+endstop_pin: PG6
+position_min: 0
+position_endstop: 309
+position_max: 309
+homing_speed: 150  #Max 100
+homing_retract_dist: 5
+homing_positive_dir: true
+
+[tmc2209 stepper_y]
+uart_pin: PD11
+interpolate: True
+run_current: 0.8
+hold_current: 0.7
+sense_resistor: 0.110
+stealthchop_threshold: 0
+ 
+#####################################################################
+#   Z Stepper Settings
+#####################################################################
+
+## Z0 Stepper - Front Left
+[stepper_z]
+step_pin: PF11
+dir_pin: PG3
+enable_pin: !PG5
+rotation_distance: 50
+gear_ratio: 80:16
+microsteps: 32
+endstop_pin: probe:z_virtual_endstop
+position_min: -5
+#position_endstop: 1
+position_max: 290
+homing_speed: 150
+second_homing_speed: 3
+homing_retract_dist: 0
+[tmc2209 stepper_z]
+uart_pin: PC6
+interpolate: true
+run_current: 0.6
+sense_resistor: 0.110
+stealthchop_threshold: 999999
+
+##  Z1 Stepper - Rear Left
+[stepper_z1]
+step_pin: PG4
+dir_pin: !PC1
+enable_pin: !PA0
+rotation_distance: 50
+gear_ratio: 80:16
+microsteps: 32
+[tmc2209 stepper_z1]
+uart_pin: PC7
+interpolate: true
+run_current: 0.6
+sense_resistor: 0.110
+stealthchop_threshold: 999999
+
+##  Z2 Stepper - Rear Right
+[stepper_z2]
+step_pin: PF9
+dir_pin: !PF10
+enable_pin: !PG2
+rotation_distance: 50
+gear_ratio: 80:16
+microsteps: 32
+[tmc2209 stepper_z2]
+uart_pin: PF2
+interpolate: true
+run_current: 0.6
+sense_resistor: 0.110
+stealthchop_threshold: 999999
+
+##  Z3 Stepper - Front Right
+[stepper_z3]
+step_pin: PC13
+dir_pin: PF0
+enable_pin: !PF1
+rotation_distance: 50
+gear_ratio: 80:16
+microsteps: 32
+[tmc2209 stepper_z3]
+uart_pin: PE4
+interpolate: true
+run_current: 0.6
+sense_resistor: 0.110
+stealthchop_threshold: 999999
+
+
+#####################################################################
+#   Extruder
+#####################################################################
+[extruder]
+step_pin: EBBCan: PD0
+dir_pin: EBBCan: PD1
+enable_pin: !EBBCan: PD2
+microsteps: 16
+rotation_distance: 4.637
+full_steps_per_rotation: 200
+nozzle_diameter: 0.400
+filament_diameter: 1.750
+max_extrude_only_distance: 500 
+max_extrude_only_velocity: 120 
+#pressure_advance: 0.068
+#pressure_advance_smooth_time: 0.03
+heater_pin: EBBCan: PB13
+sensor_type: EPCOS 100K B57560G104F
+sensor_pin: EBBCan: PA3
+#control: pid
+#pid_Kp: 21.527
+#pid_Ki: 1.063
+#pid_Kd: 108.982
+min_temp: 0
+max_temp: 265
+max_extrude_cross_section: 5
+
+[tmc2209 extruder]
+uart_pin: EBBCan: PA15
+run_current: 0.7
+stealthchop_threshold: 0
+hold_current: 0.100 
+sense_resistor: 0.11 #** 
+driver_TBL: 0 
+driver_HEND: 6 
+driver_HSTRT: 7 
+driver_TOFF: 4  
+
+
+
+
+#####################################################################
+#   CALENTADOR DE CAMA
+#####################################################################
+
+[heater_bed]
+heater_pin: PA3
+sensor_type: EPCOS 100K B57560G104F
+sensor_pin: PF3
+max_power: 0.99
+min_temp: 0
+max_temp: 120
+
+#####################################################################
+
+[adxl345]
+cs_pin: EBBCan: PB12
+spi_software_sclk_pin: EBBCan: PB10
+spi_software_mosi_pin: EBBCan: PB11
+spi_software_miso_pin: EBBCan: PB2
+axes_map: x,y,z
+
+[resonance_tester]
+##Ejecutar para modo automatico##
+#SHAPER_CALIBRATE AXIS=X
+#SHAPER_CALIBRATE AXIS=Y
+
+accel_chip: adxl345
+probe_points: 105,110, 20  # middle of bed as an example
+
+
+#####################################################################
+#   Fan Control
+#####################################################################
+
+##  VENTILADOR DEL HOTEND
+
+[heater_fan hotend_fan]
+pin: EBBCan: PA1
+heater: extruder
+heater_temp: 50.0
+fan_speed: 0.9
+
+## VENTILADOR DE CAPA
+[fan]
+pin: EBBCan: PA0
+#kick_start_time: 0.5
+#off_below: 0.10
+
+##  VENTILADOR DE LA ELECTRONICA
+[heater_fan exhaust_fan]
+pin: PD15
+shutdown_speed: 0.0
+kick_start_time: 5.0
+heater: extruder
+heater_temp: 20
+fan_speed: 0.8
+
+[controller_fan my_controller_fan]
+pin: PD14  # Pin donde conectas este ventilador
+fan_speed: 0.5 # Velocidad al 50% (para reducir ruido)
+idle_timeout: 120
+
+
+#####################################################################
+#   LED AMBIENTE
+#####################################################################
+
+[neopixel board_rgb]
+pin: unit0: PB3
+chain_count: 48
+color_order: RGB
+initial_RED: 1.0
+initial_GREEN: 0.0
+initial_BLUE: 0.0
+
+
+
+#####################################################################
+# APAGADO AUTOMATICO
+#####################################################################
+
+[output_pin PS_ON_OFF]
+pin: PG14
+pwm: False
+value: 1
+
+#####################################################################
+#   Homing and Gantry Adjustment Routines
+#####################################################################
+
+[idle_timeout]
+timeout: 121800
+
+[quad_gantry_level]
+gantry_corners:
+    -60,-10
+    360, 370
+points:
+    20,20
+    20,250
+    265,250
+    265,20
+speed: 150
+horizontal_move_z: 15
+retries: 5
+retry_tolerance: 0.05
+max_adjust: 10
+
+########################################################################
+#   SENSOR FILAMENTO
+########################################################################
+
+#[filament_switch_sensor Filamento Extrusor]
+#pause_on_runout: False
+#runout_gcode: PAUSE
+#insert_gcode: RESUME
+#switch_pin: EBBCan: PB6  # Pin that the sensor is connected to
+
+#####################################################################
+#   Macros
+#####################################################################
+[gcode_macro LOAD_FILAMENT]
+variable_load_distance:  80
+variable_purge_distance:  30
+gcode:
+    {% set speed = params.SPEED|default(300) %}
+    {% set max_velocity = printer.configfile.settings['extruder'].max_extrude_only_velocity  * 60 %}
+    SAVE_GCODE_STATE NAME=load_state
+    G91
+    G92 E0
+    G1 E{100} F{300} # fast-load
+    G1 E{30} F{150} # purge
+    RESTORE_GCODE_STATE NAME=load_state
+
+[gcode_macro UNLOAD_FILAMENT]
+variable_unload_distance:  80
+variable_purge_distance:  30
+gcode:
+    {% set speed = params.SPEED|default(300) %}
+    {% set max_velocity = printer.configfile.settings['extruder'].max_extrude_only_velocity  * 60 %}
+    SAVE_GCODE_STATE NAME=unload_state
+    G91
+    G92 E0
+    #G1 E{20} F{150} # purge
+    G1 E-{80} F{300} # fast-unload
+    RESTORE_GCODE_STATE NAME=unload_state
+
+[gcode_macro G32]
+gcode:
+    BED_MESH_CLEAR
+    {% if not 'xyz' in printer.toolhead.homed_axes %}
+    STATUS_HOMING
+    G28
+    {% endif %}
+    STATUS_LEVELING
+    QUAD_GANTRY_LEVEL
+    G28
+    G0 X150 Y150 Z20 F10000
+    STATUS_READY
+    
+    
+    [gcode_macro PIDCalibrate]
+gcode:
+    PID_CALIBRATE HEATER=extruder TARGET=210
+    PID_CALIBRATE HEATER=heater_bed TARGET=70
+    
+[gcode_macro CLEAN_NOZZLE]
+gcode:
+    {% if "xyz" in printer.toolhead.homed_axes %}
+    {% if printer.extruder.temperature >= 200 %}
+    M117 Cleaning nozzle
+    G91
+    G0 Z10 F10000
+    SAVE_GCODE_STATE NAME=clean_nozzle
+    G90
+    G0 X290 Y308 F10000
+    SAVE_GCODE_STATE NAME=clean_nozzle_above
+    G0 Z1.4 F10000
+    G0 X265 F10000
+    G0 Y305 X250
+    G0 Y306 X290
+    G0 Y305 X250
+    G0 Y306 X290
+    G0 Y305 X250
+    G0 Y306 X290
+    G0 Y305 X250
+    G0 Y306 X290
+    G0 Y305 X250
+    G0 Y306 X290
+    G0 Y305 X250
+    G0 Y306 X290
+    G0 Y305 X250
+    G0 Y306 X290
+    G0 Y305 X250
+    G0 Y306 X290
+    
+    RESTORE_GCODE_STATE NAME=clean_nozzle_above MOVE=1
+    M117 Cleaned!
+    RESTORE_GCODE_STATE NAME=clean_nozzle MOVE=1
+    G91
+    G0 Z-10 F10000
+    G90
+    {% endif %}
+    {% else %}
+    { action_raise_error("Please home your axes!") }
+    M117 Please home first!
+    {% endif %}
+    
+[gcode_macro PRIME_NOZZLE]
+gcode:
+    {% set E = params.E|default(0.5) %} # retract size
+    {% if not "xyz" in printer.toolhead.homed_axes %}
+    { action_raise_error("Please home your axes!") }
+    M117 Please home first!
+    {% else %}
+    {% if not printer.extruder.temperature >= 200 %}
+    { action_raise_error("Heat up nozzle first!") }
+    M117 Heat up nozzle first!
+    {% else %}
+    {% if not printer["filament_switch_sensor toolhead_sensor"].filament_detected %}
+    G90
+    G0 X200 Y305 F10000
+    INJECT_FILAMENT
+    CLEAN_NOZZLE
+    {% endif %}
+    {% endif %}
+    {% endif %}
+    
+
+    
+    
+    ##################################################################
+    # COMIENZO DE IMPRESION
+    ##################################################################
+[gcode_macro PRINT_START]
+gcode:
+    #STATUS_LEVELING
+    G28		; home X Y Z
+    G1 Z20 F3000            ; move nozzle away from bed
+    QUAD_GANTRY_LEVEL
+    BED_MESH_CALIBRATE ADAPTIVE=1
+    #BED_MESH_CALIBRATE
+    #SAVE_CONFIG
+    # PURGE_LINE
+    #STATUS_CLEANING
+    #CLEAN_NOZZLE
+    STATUS_READY
+    
+    
+    
+    
+    ####################################################################
+    # FIN DE IMPRESION
+    ####################################################################
+[gcode_macro PRINT_END]
+gcode:
+    M400                           ; wait for buffer to clear
+    G92 E0                         ; zero the extruder
+    G1 E-5 F1800                   ; retract filament
+    G91                            ; relative positioning
+    G0 Z1.00 X20.0 Y20.0 F20000    ; move nozzle to remove stringing
+    TURN_OFF_HEATERS
+    M107                           ; turn off fan
+    G1 Z2 F3000                    ; move nozzle up 2mm
+    G90                            ; absolute positioning
+    G0  X125 Y250 F3600            ; park nozzle at rear
+    #BED_MESH_CLEAR
+    M109 S50
+    SET_PIN PIN=PS_ON_OFF VALUE=0
+    
+    
+    ####################################################################################################################
+
+#*# <---------------------- SAVE_CONFIG ---------------------->
+#*# DO NOT EDIT THIS BLOCK OR BELOW. The contents are auto-generated.
+#*#
+#*# [probe]
+#*# z_offset = 6.703
+#*#
+#*# [extruder]
+#*# control = pid
+#*# pid_kp = 34.211
+#*# pid_ki = 6.708
+#*# pid_kd = 43.620
+#*#
+#*# [heater_bed]
+#*# control = pid
+#*# pid_kp = 42.693
+#*# pid_ki = 0.881
+#*# pid_kd = 517.115
+#*#
+#*# [input_shaper]
+#*# shaper_type_x = 2hump_ei
+#*# shaper_freq_x = 91.0
+#*# shaper_type_y = mzv
+#*# shaper_freq_y = 45.6
